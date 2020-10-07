@@ -1,0 +1,70 @@
+/*
+|-->    Copyright(C) 2020 - Matteo Vinci    <--|
+*/
+
+#include <stdosl.h>
+
+shader Sketchy_Shader (
+    float Mask = 0,
+    color Object_Color = 0.90,
+    color Sketch_Color = 0.01,
+    float Incidence = 1,
+    float Strenght = 1,
+    vector L_Position = (0 ,0, 0),
+    float L_Influence = 1,
+    string Occlusion = "No",
+    output closure color BSDF = diffuse(N),
+    output color ColorOut = 1,
+    output color Processed = 0
+)
+
+    {
+        float t = clamp(Mask, 0.0, 1.0);
+        color Sketch;
+        
+        float IncAngle = -tan(radians(Incidence));  //Incidence angle
+        
+        float L_Proc = max(dot(-L_Position, N), 0.0) * clamp(L_Influence, 0.0, 1.2);  /*Calculate Light_Source position
+                                                                                        (controlled by drivers)*/
+        
+        int trc = trace(P,N);  //trace ray from surrounding geometry
+        float Dist;
+            
+        //Mixing mask for the right angle of view
+            if(abs(dot(-I, N)) > IncAngle) {
+            
+                Sketch = mix( Object_Color, Sketch_Color, (t * Incidence) * 1.0 / (abs(dot(-I, N))) );
+            }
+            else {
+            
+                Sketch = Object_Color;
+            }
+            
+        //Processing closures
+            if(Incidence > 0) {
+            
+                ColorOut = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strenght,  -0.1, 1.0 );
+                
+                BSDF = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strenght,  0.0, 0.9) * diffuse(N);
+                
+                Processed = mix(Object_Color, Sketch, L_Proc);  //Process Light_Source direction
+                Processed = mix(Processed, Object_Color, abs(dot(-I, N)));
+                if(trc && (Occlusion == "Yes" || Occlusion == "YES" || Occlusion == "yes" || Occlusion == "Y" || Occlusion == "y")){
+                    int hit = getmessage("trace", "hitdist", Dist);  //NOT USED YET
+                    Processed = mix(Object_Color, Sketch, trc);
+                }
+            }
+            else {
+            
+                ColorOut = Object_Color;
+                
+                BSDF = Object_Color * diffuse(N);
+                
+                Processed = mix(ColorOut, Object_Color, L_Proc);
+                if(trc && (Occlusion == "Yes" || Occlusion == "YES" || Occlusion == "yes" || Occlusion == "Y" || Occlusion == "y")) {
+                    int hit = getmessage("trace", "hitdist", Dist);
+                    Processed = mix(Object_Color, Sketch, trc);
+                }
+            }
+            
+    }
