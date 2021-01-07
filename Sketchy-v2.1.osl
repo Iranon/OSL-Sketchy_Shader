@@ -9,7 +9,7 @@ shader Sketchy_Shader (
     color Object_Color = 0.90,
     color Sketch_Color = 0.01,
     float Incidence = 1,
-    float Strenght = 1,
+    float Strength = 1,
     vector L_Position = (0 ,0, 0),
     float L_Influence = 1,
     string Occlusion = "No",
@@ -43,9 +43,9 @@ shader Sketchy_Shader (
         //Processing closures
             if(Incidence > 0) {
             
-                ColorOut = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strenght,  -0.1, 1.0 );
+                ColorOut = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strength,  -0.1, 1.0 );
                 
-                BSDF = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strenght,  0.0, 0.9) * diffuse(N);
+                BSDF = clamp( mix( Sketch, Object_Color, abs(dot(-I, N)) ) * Strength,  0.0, 0.9) * diffuse(N);
                 
                 Processed = mix(Object_Color, Sketch, L_Proc);  //Process Light_Source direction
                 Processed = mix(Processed, Object_Color, abs(dot(-I, N)));
